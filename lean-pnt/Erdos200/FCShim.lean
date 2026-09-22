@@ -12,8 +12,11 @@ Sources:
   FormalConjecturesForMathlib/Combinatorics/AP/Basic.lean  (lines 44-45, 58-59, 122-123)
   FormalConjectures/ErdosProblems/200.lean                 (lines 35-36, 50-51)
 
-`scripts/check_shim.sh` re-downloads both files from `main` and fails if any copied line
+`scripts/check_shim.py` re-downloads both files from `main` and fails if any copied line
 below differs from the upstream text.
+
+This file is Apache-2.0, not MIT: the excerpts are Google's work and are not relicensed
+by this repository. See the "Licence" section of the top-level README.
 -/
 import Erdos200.Bound
 import Mathlib.Data.ENat.Basic

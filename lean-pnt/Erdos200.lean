@@ -1,4 +1,7 @@
 /-
+Copyright (c) 2026 Max Marquardt.
+Released under the MIT licence; see LICENSE at the repository root.
+
 Erdős problem #200, upper bound, built against `PrimeNumberTheoremAnd`.
 
 The sibling project `../lean` proves the bound with constant `1` under an explicit

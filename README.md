@@ -37,3 +37,21 @@ Read [`NOTES.md`](NOTES.md), and [`lean/README.md`](lean/README.md) and
 | `lean/` | Lean 4 + Mathlib formalisation; `lean/verify.sh`, exit 0 = pass |
 | `lean-pnt/` | same bound without the PNT hypothesis, via `PrimeNumberTheoremAnd`; `lean-pnt/verify.sh`, exit 0 = pass |
 | `data/`, `results/` | verified records, measured artifacts |
+
+## Licence
+
+MIT — see [`LICENSE`](LICENSE).
+
+One file is **not** MIT and is not relicensed here:
+[`lean-pnt/Erdos200/FCShim.lean`](lean-pnt/Erdos200/FCShim.lean) reproduces four short
+declarations character-for-character from
+[`google-deepmind/formal-conjectures`](https://github.com/google-deepmind/formal-conjectures),
+which is Apache-2.0, © 2024 Google LLC. They are copied only because
+`PrimeNumberTheoremAnd` and `formal-conjectures` pin incompatible Lean versions; the
+excerpts are marked with `BEGIN VERBATIM` / `END VERBATIM` and
+`lean-pnt/scripts/check_shim.py` fails if any line drifts from upstream.
+
+Nothing in `refs/` is redistributed — it holds copyrighted papers, fetched by
+[`refs/fetch.sh`](refs/fetch.sh). Mathlib, `formal-conjectures` and
+`PrimeNumberTheoremAnd` are dependencies fetched by Lake, all Apache-2.0, none vendored
+here beyond the excerpt above.

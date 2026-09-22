@@ -1,4 +1,7 @@
 /-
+Copyright (c) 2026 Max Marquardt.
+Released under the MIT licence; see LICENSE at the repository root.
+
 Axiom audit for the `PrimeNumberTheoremAnd` build.
 
 A Lean theorem can fail to mean what it appears to mean in two ways: its proof may rest

@@ -1,4 +1,7 @@
 /-
+Copyright (c) 2026 Max Marquardt.
+Released under the MIT licence; see LICENSE at the repository root.
+
 Discharging the `PNT` hypothesis using `PrimeNumberTheoremAnd`.
 
 `Erdos200.Asymptotic` proves the Erdos 200 upper bound with constant 1 under the
