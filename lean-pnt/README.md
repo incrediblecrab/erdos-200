@@ -8,12 +8,9 @@ theorem erdos_200_variants_upper (h : PNT) :
       ∀ n, longestPrimeArithmeticProgressions n ≤ (1 + o n) * Real.log n
 ```
 
-where `PNT : Tendsto (fun x ↦ Chebyshev.theta x / x) atTop (𝓝 1)` is an *assumed*
-hypothesis, because Mathlib has no Prime Number Theorem. Its unconditional bound
-therefore carries the weaker constant `1 / log 2 = 1.4427`.
+where `PNT : Tendsto (fun x ↦ Chebyshev.theta x / x) atTop (𝓝 1)` is an *assumed* hypothesis, because Mathlib has no Prime Number Theorem. Its unconditional bound therefore carries the weaker constant `1 / log 2 = 1.4427`.
 
-This project removes the hypothesis. `PrimeNumberTheoremAnd` (PNT+) proves
-`chebyshev_asymptotic : θ ~[atTop] id`, which is exactly `PNT`, so
+This project removes the hypothesis. `PrimeNumberTheoremAnd` (PNT+) proves `chebyshev_asymptotic : θ ~[atTop] id`, which is exactly `PNT`, so
 
 ```
 theorem erdos_200_variants_upper_unconditional :
@@ -21,15 +18,11 @@ theorem erdos_200_variants_upper_unconditional :
       ∀ n, longestPrimeArithmeticProgressions n ≤ (1 + o n) * Real.log n
 ```
 
-holds with no hypothesis. That is the statement `formal-conjectures` leaves as `sorry`
-at `Erdos200.erdos_200.variants.upper`.
+holds with no hypothesis. That is the statement `formal-conjectures` leaves as `sorry` at `Erdos200.erdos_200.variants.upper`.
 
 ## What this does and does not settle
 
-It does **not** touch Erdős 200. The open question is whether the bound can be improved
-to `o(log N)`; see [`../NOTES.md`](../NOTES.md) §6 and §8 for why that is out of reach of
-sieve methods. This is the *known* half of the problem, formalised — a transcription of
-the classical argument, not new mathematics.
+It does **not** touch Erdős 200. The open question is whether the bound can be improved to `o(log N)`; see [`../NOTES.md`](../NOTES.md) §6 and §8 for why that is out of reach of sieve methods. This is the *known* half of the problem, formalised — a transcription of the classical argument, not new mathematics.
 
 ## Why PNT+ contains `sorry`, and why it does not matter here
 
@@ -40,37 +33,24 @@ the classical argument, not new mathematics.
 | 323 | `prelim_decay_2` | nothing |
 | 342 | `prelim_decay_3` | `decay_alt` only |
 
-`decay_alt` is itself referenced nowhere in the project's 27 source files. So both are
-dead code. That is a textual argument, and textual arguments are not proofs — the
-`#assert_axioms chebyshev_asymptotic` line in `Erdos200/Audit.lean` is what actually
-settles it, by failing the build if `sorryAx` appears anywhere in the dependency graph.
-It reports:
+`decay_alt` is itself referenced nowhere in the project's 27 source files. So both are dead code. That is a textual argument, and textual arguments are not proofs — the `#assert_axioms chebyshev_asymptotic` line in `Erdos200/Audit.lean` is what actually settles it, by failing the build if `sorryAx` appears anywhere in the dependency graph. It reports:
 
 ```
 'chebyshev_asymptotic' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
 
-For contrast, `#print axioms prelim_decay_3` reports
-`[propext, sorryAx, Classical.choice, Quot.sound]`, confirming the check is not vacuous.
+For contrast, `#print axioms prelim_decay_3` reports `[propext, sorryAx, Classical.choice, Quot.sound]`, confirming the check is not vacuous.
 
 ## Relationship to `../lean`
 
-`../lean` is canonical. PNT+ pins Lean 4.32.2 and `formal-conjectures` pins 4.33.1, and
-two Mathlib revisions cannot coexist in one Lake project, so the shared modules are
-**generated** here by `scripts/sync.sh` with exactly two mechanical substitutions:
+`../lean` is canonical. PNT+ pins Lean 4.32.2 and `formal-conjectures` pins 4.33.1, and two Mathlib revisions cannot coexist in one Lake project, so the shared modules are **generated** here by `scripts/sync.sh` with exactly two mechanical substitutions:
 
 1. `import FormalConjectures.ErdosProblems.«200»` → `import Erdos200.FCShim`
-2. `Set.mem_ofPred_eq` → `Set.mem_setOf_eq` (Mathlib renamed this on 2026-07-09; both
-   are `rfl` lemmas with identical statements)
+2. `Set.mem_ofPred_eq` → `Set.mem_setOf_eq` (Mathlib renamed this on 2026-07-09; both are `rfl` lemmas with identical statements)
 
-`Erdos200/{Structure,Bound,Asymptotic}.lean` are generated and gitignored. Edit
-`../lean/Erdos200/` instead.
+`Erdos200/{Structure,Bound,Asymptotic}.lean` are generated and gitignored. Edit `../lean/Erdos200/` instead.
 
-Because `formal-conjectures` cannot be a dependency, the definitions it supplies are
-copied into `Erdos200/FCShim.lean`. `scripts/check_shim.py` re-downloads
-`formal-conjectures` `main` and fails if any copied line differs. This replaces the
-`Expr`-level fidelity check that `../lean/Erdos200/Audit.lean` performs; it is a weaker
-guarantee, and the difference is deliberate and stated rather than glossed over.
+Because `formal-conjectures` cannot be a dependency, the definitions it supplies are copied into `Erdos200/FCShim.lean`. `scripts/check_shim.py` re-downloads `formal-conjectures` `main` and fails if any copied line differs. This replaces the `Expr`-level fidelity check that `../lean/Erdos200/Audit.lean` performs; it is a weaker guarantee, and the difference is deliberate and stated rather than glossed over.
 
 ## Verifying
 
@@ -78,9 +58,7 @@ guarantee, and the difference is deliberate and stated rather than glossed over.
 bash verify.sh
 ```
 
-which regenerates the shared modules, checks `FCShim.lean` against upstream, builds, and
-asserts that all 4 audited declarations rest only on
-`{propext, Classical.choice, Quot.sound}`. Exit 0 means all four checks passed.
+which regenerates the shared modules, checks `FCShim.lean` against upstream, builds, and asserts that all 4 audited declarations rest only on `{propext, Classical.choice, Quot.sound}`. Exit 0 means all four checks passed.
 
 Both gates were tested against planted defects:
 

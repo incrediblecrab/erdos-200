@@ -2,19 +2,13 @@
 
 **Question.** Does it have length $o(\log N)$? **Status: open.** Not solved here.
 
-**Objective.** Establish what is rigorously true, recompute $L(N)$ as far as compute
-allows, test the standard heuristic against measured counts, and quantify why sieve
-methods cannot close the gap.
+**Objective.** Establish what is rigorously true, recompute $L(N)$ as far as compute allows, test the standard heuristic against measured counts, and quantify why sieve methods cannot close the gap.
 
-**Inputs.** A local mirror of erdosproblems.com/200; OEIS A005115, A113827, A093364, A133277; Luhn's
-records page; Granville, *Prime Number Patterns*; the Green–Tao note. Run
-`refs/fetch.sh` — none are redistributed here.
+**Inputs.** A local mirror of erdosproblems.com/200; OEIS A005115, A113827, A093364, A133277; Luhn's records page; Granville, *Prime Number Patterns*; the Green–Tao note. Run `refs/fetch.sh` — none are redistributed here.
 
 **Findings.** $L(N)$ independently re-derived for every $N\le5.73\times10^{11}$. The Hardy–Littlewood model matches exhaustive counts to within 1 % over 30 tests; it predicts $L(N)\sim2\log N/\log\log N$, so the answer is conjecturally **yes** — but the decay is $2/\log\log N$, invisible to any computation. Selberg's sieve, the large sieve and Gallagher's larger sieve cannot prove $L(N)<c\log N$ for any fixed $c<1$: at $k=c\log N$ a proof must save a factor $e^{(2/c-1)k}$, and these sieves save $e^{o(k)}$ (NOTES §6, corrected September 22, 2026, after the earlier argument for it turned out to be invalid). The known upper bound is now **machine-checked in Lean 4**: $L(N)\le(1+o(1))\log N$ with **no hypotheses** — the statement DeepMind's FormalConjectures leaves as `sorry`. Mathlib has no prime number theorem, so `lean/` proves that form conditionally and gets $1/\log2=1.4427$ unconditionally; `lean-pnt/` discharges the hypothesis against `PrimeNumberTheoremAnd` and recovers the constant $1$.
 
-Read [`NOTES.md`](NOTES.md), and [`lean/README.md`](lean/README.md) and
-[`lean-pnt/README.md`](lean-pnt/README.md) for the formal part. Reproduce with
-`bash scripts/reproduce.sh`, `bash lean/verify.sh` and `bash lean-pnt/verify.sh`.
+Read [`NOTES.md`](NOTES.md), and [`lean/README.md`](lean/README.md) and [`lean-pnt/README.md`](lean-pnt/README.md) for the formal part. Reproduce with `bash scripts/reproduce.sh`, `bash lean/verify.sh` and `bash lean-pnt/verify.sh`.
 
 | path | contents |
 |---|---|
@@ -35,16 +29,6 @@ Read [`NOTES.md`](NOTES.md), and [`lean/README.md`](lean/README.md) and
 
 MIT — see [`LICENSE`](LICENSE).
 
-One file is **not** MIT and is not relicensed here:
-[`lean-pnt/Erdos200/FCShim.lean`](lean-pnt/Erdos200/FCShim.lean) reproduces four short
-declarations character-for-character from
-[`google-deepmind/formal-conjectures`](https://github.com/google-deepmind/formal-conjectures),
-which is Apache-2.0, © 2024 Google LLC. They are copied only because
-`PrimeNumberTheoremAnd` and `formal-conjectures` pin incompatible Lean versions; the
-excerpts are marked with `BEGIN VERBATIM` / `END VERBATIM` and
-`lean-pnt/scripts/check_shim.py` fails if any line drifts from upstream.
+One file is **not** MIT and is not relicensed here: [`lean-pnt/Erdos200/FCShim.lean`](lean-pnt/Erdos200/FCShim.lean) reproduces four short declarations character-for-character from [`google-deepmind/formal-conjectures`](https://github.com/google-deepmind/formal-conjectures), which is Apache-2.0, © 2024 Google LLC. They are copied only because `PrimeNumberTheoremAnd` and `formal-conjectures` pin incompatible Lean versions; the excerpts are marked with `BEGIN VERBATIM` / `END VERBATIM` and `lean-pnt/scripts/check_shim.py` fails if any line drifts from upstream.
 
-Nothing in `refs/` is redistributed — it holds copyrighted papers, fetched by
-[`refs/fetch.sh`](refs/fetch.sh). Mathlib, `formal-conjectures` and
-`PrimeNumberTheoremAnd` are dependencies fetched by Lake, all Apache-2.0, none vendored
-here beyond the excerpt above.
+Nothing in `refs/` is redistributed — it holds copyrighted papers, fetched by [`refs/fetch.sh`](refs/fetch.sh). Mathlib, `formal-conjectures` and `PrimeNumberTheoremAnd` are dependencies fetched by Lake, all Apache-2.0, none vendored here beyond the excerpt above.
