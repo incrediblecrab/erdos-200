@@ -36,7 +36,7 @@ of why the standard method cannot reach it.
 | 4 | $L(N)$ exactly, for all $N < a(27)$ — certainly for all $N < a(26)=1.28\times10^{16}$, since $a(27)$ is known only to satisfy $a(27)\le 6.96\times10^{17}$ | cited (OEIS A005115, Luhn), verified for consistency, not recomputed |
 | 5 | Hardy–Littlewood model of the AP count | validated against exact counts, geometric mean ratio 0.9939 over 30 tests |
 | 6 | $L(N)\sim 2\log N/\log\log N$, so the answer is **yes** | heuristic only — *not* a proof |
-| 7 | No sieve upper bound of the classical shape yields $L(N)\le c\log N$ for any $c$ | computed below; vacuous by a margin of $\ge 10^{3.2}$, growing without bound |
+| 7 | Selberg's sieve (per difference or joint), the large sieve and Gallagher's larger sieve cannot yield $L(N)<c\log N$ for any fixed $c<1$ | proved for the larger sieve at every $N$, and for the others as $N\to\infty$ at any fixed level $N^A$ (§6); computed at the 19 records, where the main term is at least $e^{1.41}$, and up to $N=10^{10^6}$, where the level needed exceeds $N^{2.33}$. **Corrected September 22, 2026**: the earlier "margin $\ge10^{3.2}$" measured a formula, not a sieve (§6.2) |
 | 8 | Best known lower bound: $L(N)\gg\log_2^{(7)}N$ | cited (Green–Tao), verified verbatim from the source |
 | 9 | $L(N)\le(1+o(1))\log N$, **unconditionally** | **machine-checked in Lean 4** (§9) — DeepMind's `erdos_200.variants.upper`, which they leave `sorry`. The PNT is imported from `PrimeNumberTheoremAnd`; `lean/` alone yields the weaker constant $1/\log2$ |
 
@@ -275,41 +275,98 @@ Anyone arguing from the numerical table in either direction is over-reading it.
 
 ## 6. Why sieve methods give nothing
 
-This is the substantive negative result, and it is computed in `src/barrier.py`.
+This is the substantive negative result. It is computed by `src/sieve_limits.py`, which writes `results/sieve_limits.json`, and re-derived by section G of `src/final_check.py`, which shares no code with it.
 
-The classical $k$-dimensional Selberg / Halberstam–Richert upper bound for an admissible
-$k$-tuple loses a factor $2^kk!$ against the conjectured truth:
-$$\#\{a\le x: a+h_1,\dots,a+h_k \text{ all prime}\}\;\le\;\bigl(2^kk!+o(1)\bigr)\mathfrak S(H)\frac{x}{(\log x)^k}.$$
-Applying it for every admissible $d$ and summing gives $B(k,N)=2^kk!\,C_k(N)$. If
-$B(k,N)<1$ for some $k=c\log N$ with $c<1$, that would prove $L(N)<c\log N$ and settle
-the problem. Substituting the asymptotics of §4, $B(k,N)<1$ requires
-$$\log\log k+\log c+\gamma+\log 2-2+\frac{2}{c}\;<\;0 .$$
-The function $\log c+2/c$ is minimised at $c=2$ with value $1+\log2$, so the requirement
-is at best $\log\log k<2-\gamma-2\log2-1=-0.9635$, i.e. **$k<1.465$**. At $c=1$ it is
-$k<1.33$; at $c=1/2$, $k<1.08$.
+> **Result.** Selberg's $\Lambda^2$ upper-bound sieve, applied to each common difference separately or to all candidate progressions jointly, and the large sieve cannot prove $L(N)<c\log N$ for any fixed $c<1$ at any fixed level $N^A$ once $N$ is large: their main term alone tends to infinity (§6.1). Gallagher's larger sieve, and congruences modulo primes up to about $\log N$, give no more than the primorial bound of Prop. 2 (§6.3). For $c>1$ nothing is left to prove, since Prop. 2 already gives $L(N)<c\log N$ for large $N$. The shortfall is not a constant factor: at $k=c\log N$ a proof must save a factor $e^{(2/c-1)k}$ over the number of candidates, and these sieves save $e^{o(k)}$.
 
-> **No $k\ge3$ qualifies, at any $c$.** The classical sieve bound is vacuous for every
-> $k$ and every $N$ — it does not even recover the trivial primorial bound of Prop. 2.
+*Correction, September 22, 2026.* The previous version of this section argued from $B(k,N)=2^kk!\,C_k(N)$, the classical Selberg bound for a $k$-tuple summed over admissible $d$, and concluded from $B\ge10^{3.2}$ everywhere that sieve methods are vacuous. The conclusion survives, but that argument did not establish it; §6.2 says why. `src/barrier.py` still computes $B$, its docstring now says what $B$ is and is not, and `results/barrier.json` is byte-identical to the version first committed.
 
-Evaluated numerically on a grid of $\log_{10}N$ from $2$ to $10^{100}$ and
-$c\in\{0.2,\dots,1.0\}$: $\min\log_{10}B=3.21$, attained at the very smallest case, and
-$\log_{10}B$ grows without bound thereafter (e.g. $2.8\times10^9$ at
-$\log_{10}N=10^9$, $c=0.5$). The asymptotic form of $C_k$ used there *under*states the
-exact heuristic by a factor of about 2 (geometric mean 0.539 over 12 test points), so
-$B$ is understated and the conclusion is conservative.
+### 6.1 The main term
 
-The obstruction is sharp enough to quantify. The overshoot factor is
-$\exp\bigl(k[\log\log k+\log c+\gamma+\log2-2+2/c]\bigr)$, whose leading $k$-dependence
-is $(\log k)^{k}$. So one would need to **beat the Selberg constant $2^kk!$ by a further
-factor $(\log k)^{k(1+o(1))}$**. Elliott–Halberstam-type improvements save at most
-$2^k$ — nowhere near enough. And a *perfect* sieve, with constant $1$, returns exactly
-the Hardy–Littlewood threshold $k\sim2\log N/\log\log N$, i.e. it would answer the
-question. The entire difficulty of Erdős #200 sits in that gap, which is the parity
-problem.
+By Prop. 1 a $k$-AP of primes in Case A has $a>k$ and $d=mW_k$. Call the pairs $(a,m)$ with $a>k$, $m\ge1$ and $a+(k-1)mW_k\le N$ the *candidates*. For $d=mW_k$ the first term takes $X_d=N-k-(k-1)d$ values, so there are
+$$T_0=\sum_{m=1}^{M}X_{mW_k}=M(N-k)-(k-1)W_k\,\frac{M(M+1)}{2},\qquad M=\Bigl\lfloor\frac{N-k-1}{(k-1)W_k}\Bigr\rfloor,$$
+candidates, computed here in exact integers. $T_0=0$ once $(k-1)W_k\ge N-k$, which is Prop. 2's territory. A sieve proof of $L(N)<k$ has to show that fewer than one candidate has all $k$ terms prime.
 
-(Applying the sieve bound for *every* $d$ is generous: when $d$ is comparable to $N$ the
-tuple diameter is comparable to $x$ and the bound in that form is not available at all.
-Granting it anyway only inflates $B$, so the demonstration that $B>1$ is a fortiori.)
+**Per difference.** Fix $d=mW_k$ and sift the $X_d<N$ possible first terms. Write the local densities as $h(p)=g(p)/(1-g(p))$: $h(p)=1/(p-1)$ for $p\le k$, since every term is then congruent to $a$; $h(p)=k/(p-k)$ for $p>k$ with $p\nmid d$; and $h(p)=1/(p-1)\le k/(p-k)$ for $p>k$ with $p\mid d$. Selberg's bound with weights $\lambda_q$ supported on $q\le\xi$ is $X_dQ(\lambda)+R$, where $Q(\lambda)\ge1/G_d(\xi)$ with $G_d(\xi)=\sum_{q\le\xi}\mu^2(q)\prod_{p\mid q}h(p)$. The method bounds $R$ by a nonnegative quantity, so its output is at least $X_d/G_d(\xi)$. Replacing each $h(p)$ by $h^*(p)$, which is $1/(p-1)$ for $p\le k$ and $k/(p-k)$ above, gives a single $G^*(\xi)\ge G_d(\xi)$ for every $d$, so summed over $d$ the main term is at least $T_0/G^*(\xi)$. Progressions with a term that is itself a prime $\le\xi$ are removed by the sieve although they may be genuine; adding them back only raises the bound. The large sieve's bound $(X_d+\xi^2)/G_d(\xi)$ is at least the same $X_d/G_d(\xi)$. (With $\lambda=\mu$ and unlimited support the $\Lambda^2$ bound is exact, so all of this concerns main term plus remainder *estimate*. Such estimates are useful only up to the natural level, which for one $d$ is about $X_d<N$; $\xi=\sqrt N$ covers it.)
+
+**Jointly.** Sifting all the pairs $(a,m)$ at once, rather than one $d$ at a time, gives $h(p)=1/(p-1)$ for $p\le k$ and, for $p>k$,
+$$h(p)=\frac{1+(p-1)k}{(p-1)(p+1-k)}\;<\;\frac{k}{p-k},$$
+since after cross-multiplying the two sides differ by $p(1-k)<0$. So $G^*$ dominates the joint sieve too, and its main term is again at least $T_0/G^*(\xi)$. Its natural level is below $T_0$: a class of pairs modulo $q$ holds $T_0/q^2+O(N/q+1)$ of them, so the error bound matches the main term once $q$ is near $T_0/N$. The records below nonetheless evaluate it at level $\max(T_0,N)$. A larger level can only lower this bound for the main term, so a value above 1 at a generous level settles every smaller one.
+
+**Closed form.** Split $q=q_1q_2$ with $q_1\mid W_k$ and every prime factor of $q_2$ above $k$. The sum over $q_1$ is $\prod_{p\le k}\bigl(1+\frac{1}{p-1}\bigr)=W_k/\varphi(W_k)$. A squarefree $q_2\le\xi$ has at most $J=\lfloor\log\xi/\log p_k^+\rfloor$ prime factors, and the $j$-th elementary symmetric function of the $h^*(p)$, $k<p\le\xi$, is at most $S^j/j!$. Hence
+$$G^*(\xi)\;\le\;\frac{W_k}{\varphi(W_k)}\,E_J(S),\qquad E_J(S)=\sum_{j=0}^{J}\frac{S^j}{j!},\qquad S=\sum_{k<p\le\xi}\frac{k}{p-k},$$
+and the main term is at least $T/E_J(S)$, where $T=T_0\,\varphi(W_k)/W_k$. This needs only $S$, which is summed exactly below $2\times10^8$ and bounded beyond it by Dusart's inequality $\sum_{p\le x}1/p\le\log\log x+0.2614972\ldots+\frac{1}{10\log^2x}+\frac{4}{15\log^3x}$ for $x\ge10372$, the constant being Meissel–Mertens' (Theorem 6.10 of [arXiv:1002.0442](https://arxiv.org/abs/1002.0442), read from the rendered page; published as [DOI:10.1007/s11139-016-9839-4](https://doi.org/10.1007/s11139-016-9839-4), whose theorem numbering I have not checked). `sieve_limits.py` tests the inequality at all 11,077,665 primes in $[10372,2\times10^8]$ and finds no violation; that covers every real $x$ in the range, since the left side only jumps at primes.
+
+**Asymptotics.** $S=O(k\log k)$: the primes in $(k,2k]$ contribute at most $kH_k$, because the $p-k$ are distinct integers in $[1,k]$, and each $p>2k$ contributes less than $2k/p$. Put $k=c\log N$ and $\xi=N^{A/2}$. Then $J\sim(A/2c)\,k/\log k$ and, since $S^j/j!\le(eS/j)^j$,
+$$\log E_J(S)\;\le\;\log(J+1)+J\log\frac{eS}{J}\;=\;O\Bigl(\frac{k\log\log k}{\log k}\Bigr)\;=\;o(k).$$
+Meanwhile $\log T=(2/c-1)k-o(k)$ provided $M\to\infty$, which holds for $c<1$. (For $c>1$, $W_k>N$ eventually and $T_0=0$.) So for fixed $c<1$ and fixed $A$ the main term is at least $e^{(2/c-1)k-o(k)}$, which tends to infinity: none of these sieves proves $L(N)<c\log N$ for large $N$.
+
+**At the records.** At $N=a(k)-1$ for $k=8,\dots,26$ no $k$-AP of primes exists, so a sieve proof would have something true to prove. $G^*(\sqrt N)$ is computed exactly, by a depth-first sum over squarefree $q\le\sqrt N$ that agrees with brute force at $\xi=20000$ for $k=5,12,26$. Logarithms are natural except in the last column, which compares the old $B$.
+
+| $k$ | $M$ | $\log T_0$ | $\log G^*(\sqrt N)$ | $\log(T_0/G^*)$ | $\log(T/E_J)$ at level $N$ | $\log(T/E_J)$ at level $\max(T_0,N)$ | $\log_{10}(B/T_0)$ |
+|---|---|---|---|---|---|---|---|
+| 8 | 1 | 5.247 | 2.978 | 2.269 | 1.640 | 1.640 | 4.80 |
+| 9 | 1 | 5.242 | 3.317 | 1.924 | 1.269 | 1.269 | 5.61 |
+| 10 | 1 | 5.236 | 3.817 | 1.419 | 0.783 | 0.783 | 6.37 |
+| 11 | 10 | 14.014 | 4.826 | 9.188 | 7.296 | 7.160 | 4.99 |
+| 12 | 10 | 14.024 | 5.521 | 8.503 | 6.550 | 6.449 | 5.66 |
+| 13 | 2 | 12.822 | 4.760 | 8.062 | 6.028 | 6.028 | 7.16 |
+| 14 | 94 | 21.266 | 6.186 | 15.080 | 11.694 | 11.384 | 6.15 |
+| 15 | 412 | 24.298 | 7.059 | 17.239 | 14.020 | 11.497 | 6.30 |
+| 16 | 441 | 24.502 | 7.904 | 16.598 | 13.264 | 10.514 | 6.86 |
+| 17 | 591 | 27.985 | 7.853 | 20.132 | 17.285 | 14.673 | 7.42 |
+| 18 | 1960 | 30.444 | 8.983 | 21.461 | 16.303 | 13.564 | 7.64 |
+| 19 | 478 | 30.624 | 8.016 | 22.608 | 17.708 | 17.312 | 8.89 |
+| 20 | 3108 | 34.423 | 8.820 | 25.603 | 20.923 | 18.257 | 9.02 |
+| 21 | 32316 | 39.157 | 9.870 | 29.287 | 24.943 | 19.849 | 8.97 |
+| 22 | 175472 | 42.589 | 11.127 | 31.463 | 27.285 | 21.728 | 9.06 |
+| 23 | 91670 | 44.473 | 10.175 | 34.298 | 28.057 | 25.229 | 10.13 |
+| 24 | 237293 | 46.420 | 10.749 | 35.671 | 29.561 | 26.642 | 10.57 |
+| 25 | 1078257 | 49.490 | 11.488 | 38.001 | 32.122 | 26.849 | 10.82 |
+| 26 | 2292031 | 51.039 | 12.143 | 38.896 | 33.140 | 27.686 | 11.27 |
+
+All three main-term columns are positive in every row: no sieve of these kinds proves even the known fact $L(a(k)-1)<k$. The margin is smallest at $k=8,9,10$, where $M=1$ and there are only 188 to 190 candidates, and least at $k=10$: a main term of at least $e^{1.419}\approx4.1$ with the exact $G^*$, and $e^{0.78}\approx2.2$ from the closed form. From $k=11$ it grows, not monotonically, to $e^{38.9}$ at $k=26$. The joint level $\max(T_0,N)$ reaches $N^{1.376}$ at $k=26$; at $k=8,9,10,13$, $T_0<N$ and the two closed-form columns coincide.
+
+**On a grid.** For $k=\lfloor c\log N\rfloor$ with $c\in\{0.3,0.5,0.7,0.9,1.0\}$ and $\log_{10}N\in\{10,16,30,100,10^3,10^4,10^5,10^6\}$, the closed form leaves a main term above 1 at level $N$ and at level $N^2$ in all 80 cases, by at least $e^{3.05}$ (at $\log_{10}N=10$, $c=1$, level $N^2$). The table gives the exponent $A$ of the level $N^A$ at which the closed form first allows a main term below 1. Below that level no Selberg or large-sieve proof exists; above it, the closed form no longer rules one out.
+
+| $c$ | $\log_{10}N=10$ | $16$ | $30$ | $100$ | $10^3$ | $10^4$ | $10^5$ | $10^6$ |
+|---|---|---|---|---|---|---|---|---|
+| 0.3 | 39.3 | 18.3 | 17.6 | 9.11 | 9.77 | 11.7 | 13.4 | 14.7 |
+| 0.5 | 4.90 | 4.48 | 5.33 | 5.92 | 6.83 | 8.20 | 9.36 | 10.6 |
+| 0.7 | 3.20 | 3.84 | 3.91 | 4.29 | 5.15 | 6.25 | 7.23 | 8.17 |
+| 0.9 | 2.72 | 2.94 | 3.04 | 3.39 | 4.09 | 4.83 | 5.56 | 6.22 |
+| 1.0 | 2.34 | 2.55 | 2.68 | 2.98 | 3.59 | 4.14 | 4.87 | 5.53 |
+
+Every entry exceeds 2, the least being $A=2.3398$, whereas the per-difference sieve's natural level is below $N$ and the joint sieve's is below $T_0<N^2$. From $\log_{10}N=100$ on, every row grows. To leading order $A$ grows like $(2-c)\log k/\log\log k$, but the lower-order terms are large: at $\log_{10}N=10^6$ that expression gives 5.46 against the computed 5.53 at $c=1$, and 8.80 against 14.7 at $c=0.3$.
+
+Per term of the progression, a proof must save $\log T/k\approx2/c-1$ nats (5.668, 3.001, 1.858, 1.223 and 1.001 at $\log_{10}N=10^6$ for the five values of $c$). The sieve supplies $\log E_J/k$: between 0.23 and 1.62 at level $N$, and between 0.42 and 2.79 at level $N^2$, over the whole grid, falling as $N$ grows from $\log_{10}N=16$ on. For scale, at $\log_{10}N=16$ and $c=0.7$ ($k=25$) the asymptotic Hardy–Littlewood count that `barrier.py` uses predicts a saving of 1.959 per term against the 1.951 needed, so it expects $e^{25(1.951-1.959)}\approx0.8$ such progressions below $10^{16}$. That asymptotic form runs below the exact heuristic of §4 by a factor of about 1.9 (geometric mean 0.539 over 12 test points, `barrier.py` section 1), and one such progression does exist, since $a(25)=5.77\times10^{15}$. The sieve supplies 0.62 per term there.
+
+Up to $\log_{10}N=10^4$, which is 30 of the 40 $(c,N)$ points, $T_0$ is an exact integer. Beyond that $\log T_0$ is taken as $2\log N-\log(2(k-1))-\theta(k)$, which agrees with the exact value to within $5\times10^{-11}$, that is to rounding error, at the 14 points where both are available and $M>e^{40}$. The grid is computed in floating point, and beyond $\xi=2\times10^8$ it depends on Dusart's inequality.
+
+### 6.2 What was wrong with the previous argument
+
+The previous version computed $B(k,N)=2^kk!\,C_k(N)$ and read $B\ge1$ as "the sieve is vacuous". The conclusion survives only because §6.1 proves it differently; the argument itself had six faults.
+
+1. **The tuple bound is for fixed $k$.** $\bigl(2^kk!+o(1)\bigr)\mathfrak S(H)\,x/(\log x)^k$ holds as $x\to\infty$ with $k$ fixed, and the $o(1)$ depends on $k$. At $k=c\log N$ it is not justified as written, so even $B<1$ would not have been a proof.
+2. **$B$ is not a possible sieve output.** Every Selberg main term is at most $T_0$, since $G\ge1$. Of the 106 points in `results/barrier.json`, the 82 with $\log_{10}N\le10^6$ can be compared; beyond that, $k$ exceeds the prime table's $2\times10^8$. $B>T_0$ at 69 of them, including all 57 with $c\ge0.7$ or $\log_{10}N\ge300$, and at all 19 records, by $10^{4.80}$ to $10^{11.27}$. There $B$ exceeds anything a sieve main term can be, so $B\ge1$ says nothing about the sieve. At the other 13 points, all with $c\le0.5$ and $\log_{10}N\le100$, the comparison is inconclusive. Over the 82, $\log_{10}(B/T_0)$ runs from $-2.67$ to $2.92\times10^6$.
+3. **The *a fortiori* step was backwards.** Granting the tuple bound for every $d$ inflates $B$, which makes $B>1$ easier to reach and therefore less informative, not more. Showing that a sieve is vacuous needs a *lower* bound for its output, which is what $T/E_J$ is.
+4. **The margins measured the formula.** $\min\log_{10}B=3.21$, and $\log_{10}B=2.8\times10^9$ at $\log_{10}N=10^9$, describe $B$, not any sieve. The margin that matters is the main term's: at level $N$ the lower bound of §6.1 exceeds 1 at all 82 comparable points, least $e^{2.40}$ at $\log_{10}N=2$, $c=0.9$. The $(\log k)^k$ growth of the old "overshoot" is $B$'s own excess over $T_0$: at the 6 comparable points with $k\ge10^5$, $\log(B/T_0)$ matches $\log\bigl[(2e^{\gamma-1}c\log k)^k\,e^{-k/(2\log k)}\sqrt{2\pi k}/(e^\gamma\log k)\bigr]$ to within 0.021 %, where $2e^{\gamma-1}\approx1.31$.
+5. **"It does not even recover the primorial bound" was an artefact.** $T_0=0$ once $(k-1)W_k\ge N-k$, which is Prop. 2's Case A condition with $k+1$ in place of $p_k^+$, so any sieve over the candidates recovers the primorial bound automatically. Only the smooth formula for $C_k$ misses it.
+6. **The diagnoses built on $B$ do not survive.** The claims that Elliott–Halberstam saves at most $2^k$ and that the gap is the parity problem were both read off $B$. Elliott–Halberstam does not enter, because the objects sifted are integers, not primes, and their counts in residue classes are elementary; there is no level of distribution for it to raise. The obstruction §6.1 measures is dimension against level: in dimension $k\asymp\log N$ a sieve at level $N^A$ sees at most $J\approx A\log N/(2\log k)$ prime factors above $k$ and saves $e^{o(k)}$, where $e^{(2/c-1)k}$ is needed.
+
+### 6.3 The larger sieve, and congruences at small primes
+
+Gallagher's larger sieve (*A larger sieve*, Acta Arith. **18** (1971) 77–81, [DOI:10.4064/aa-18-1-77-81](https://doi.org/10.4064/aa-18-1-77-81)) bounds a set of integers in $[1,N]$ that occupies at most $\nu(p)$ residue classes modulo each prime $p\le z$ by
+$$\frac{\sum_{p\le z}\log p-\log N}{\sum_{p\le z}\log p/\nu(p)-\log N},$$
+when the denominator is positive. Apply it to the $k$ terms of a Case A progression. Then $\nu(p)=1$ for $p\le k$, since $p\mid d$, and $\nu(p)\le k$ for $k<p\le z$; a proof must cover $d=W_k$, where $\nu(p)=k$ for all of them. With those values the numerator minus $k$ times the denominator is $(k-1)(\log N-\theta(k))$, so the bound is below $k$ exactly when $\theta(k)>\log N$, whatever $z$ is. That is the primorial condition $W_k>N$. Prop. 2 needs only $p_k^++(k-1)W_k>N$, so the larger sieve gives slightly less than Prop. 2. `sieve_limits.py` confirms the equivalence in all 15,210 cases with $3\le k\le80$, $N=10^2,10^3,\dots,10^{40}$ and $z\in\{k,2k,k^2,10^4,10^7\}$.
+
+More generally, congruences modulo primes up to about $\log N$ cannot exclude a progression of any length $k\le\log N$. Put $W_z=\prod_{p\le z}p$. For every $k$, the progression $p_z^++iW_z$, $0\le i<k$, has no term divisible by a prime $\le z$, since each term is congruent to $p_z^+\not\equiv0$ modulo every such prime, and it lies in $[1,N]$ whenever $p_z^++(k-1)W_z\le N$. For $k\le\log N$ that allows every $z\ge3$ with $\theta(z)\le\log N-\log\log N$. So whatever excludes long progressions of primes must use primes above about $\log N$, and §6.1 bounds what a sieve can extract from those.
+
+### 6.4 What is and is not covered
+
+**Covered:** Selberg's $\Lambda^2$ sieve, per difference and jointly, with any nonnegative remainder estimate, at every level up to $N$ at the records (for the joint sieve, up to $\max(T_0,N)$) and up to at least $N^{2.33}$ on the grid; the large sieve over the same range of levels; Gallagher's larger sieve with any $z$; and congruences modulo primes up to about $\log N$. The asymptotic statement is for fixed $c<1$ and fixed $A$; it is not uniform as $c\to1$ or $A\to\infty$.
+
+**Not covered:** combinatorial and $\beta$-sieves in dimension $\asymp\log N$, whose main terms are not of Selberg's form; sieves that require the first term to be prime and sift the other $k-1$ terms, where Bombieri–Vinogradov or Elliott–Halberstam would enter; weighted sieves; and every method that is not a sieve. None of this bears on whether $L(N)=o(\log N)$ is *true*, which §5 predicts; it concerns only which methods cannot show it.
 
 ## 7. Lower bounds: what is actually known
 
@@ -368,20 +425,7 @@ Hardy–Littlewood. That is a negative search result, not a proof that none exis
 
 ## 8. What would count as progress
 
-1. Any $c<1$ with $L(N)\le c\log N$ for large $N$. By §6 this cannot come from a
-   classical sieve. It is worth being precise about *why*, because the obvious escape
-   route is already closed. One might hope to exploit the **rigidity** of an AP — all
-   $k$ terms lie in one progression, rather than forming an arbitrary admissible
-   $k$-tuple. But the bound $B(k,N)$ of §6 already exploits that fully: by Prop. 1 the
-   common difference satisfies $W_k\mid d$, and $B$ is obtained by summing the tuple
-   bound only over those $d$, which is exactly what puts $(k-1)W_k$ in the denominator
-   of $C_k(N)$. Rigidity is therefore already spent, and the entire remaining deficit is
-   the per-tuple constant $2^kk!$. So the requirement is not "use more structure" but
-   specifically: **obtain a $k$-tuple upper bound with constant
-   $2^kk!/(\log k)^{k(1+o(1))}$ or better, uniformly for $k\asymp\log N$.** A constant of
-   $1$ — a perfect sieve — would return the Hardy–Littlewood threshold itself and settle
-   the problem outright. That gap is the parity problem, and nothing short of breaking it
-   is known to help.
+1. Any $c<1$ with $L(N)\le c\log N$ for large $N$. By §6 this cannot come from Selberg's sieve, the large sieve or the larger sieve, and it is worth being precise about *why*, because the obvious escape route is already closed. One might hope to exploit the **rigidity** of an AP — all $k$ terms lie in one progression, rather than forming an arbitrary admissible $k$-tuple. But §6.1 already exploits that fully: by Prop. 1 only $d=mW_k$ are sifted, and the joint sieve over $(a,m)$ uses the shape of the progression at every prime. Rigidity is therefore already spent, and what remains is quantitative. At $k=c\log N$ a proof must save a factor $e^{(2/c-1)k}$ over the candidate count, while a sieve at level $N^A$ saves $e^{o(k)}$; the closed form of §6.1 does not allow a main term below 1 until $A$ reaches 2.3398 even in the most favourable case tested, and the required $A$ grows like $(2-c)\log k/\log\log k$, far beyond any level at which remainders are controlled. I know of no method that supplies the missing $e^{(2/c-1)k}$, and the neighbouring problems with patterns of that length (§8.1) are all open.
 2. An unconditional bound $L(N)=o(\log N)$ with any decay rate, however slow — the
    conjecture says the truth is $2/\log\log N$, so even $\log N/\log\log\log N$ would be
    a first.
@@ -411,6 +455,29 @@ magnitude. Perrenet attaches his own disclaimer — "Sadly I lost track of which
 used to produce the records above" — so the runtimes are reported, not reproduced here.
 Verified independently: his AP-26 witness $(15626261+1666981n)\cdot23\#+59138353$ has
 last term $12783396861134173$, exactly OEIS $a(26)$.
+
+### 8.1 Neighbouring problems
+
+The local tracker in `../tracker-and-solver`, a separate project that is not part of this repository, was read on September 22, 2026 for problems close to #200: ones that ask for many values of a pattern to be prime at once, and ones about sifting or primorials at the scale $\log n$. `results/sieve_limits.json` records the tracker build that was read. The selection is mine and is not exhaustive. Statuses are the site's, as mirrored by the tracker, and agree with [`teorth/erdosproblems`](https://github.com/teorth/erdosproblems); the pattern column is my annotation of how many values must be prime at once.
+
+| # | status | pattern | question | how it was settled, or what is known |
+|---|---|---|---|---|
+| [219](https://www.erdosproblems.com/219) | PROVED (LEAN) | $k$ fixed | arbitrarily long APs of primes? | yes: Green–Tao |
+| [1187](https://www.erdosproblems.com/1187) | SOLVED | $k$ fixed | monochromatic prime $k$-APs in every finite colouring? | yes, from Green–Tao; its second question, with prime common difference, is trivially no |
+| [457](https://www.erdosproblems.com/457) | PROVED (LEAN) | — | for some $\epsilon>0$, do all primes $p\le(2+\epsilon)\log n$ divide $\prod_{i\le\log n}(n+i)$ for infinitely many $n$? | yes: a CRT construction by GPT-5.2 Pro, prompted by Barreto, with an elaboration by Tao |
+| [1202](https://www.erdosproblems.com/1202) | SOLVED | — | is there a $k$ such that removing any $(p_i-1)/2$ classes modulo each of any $k$ primes $p_i<n^{1-\epsilon}$ leaves at most $\epsilon n$ integers $m\le n$? | no: a construction by Price and GPT-5.4 Pro; the site notes that the large sieve gives yes when $p_k<n^{1/2}$ |
+| [1140](https://www.erdosproblems.com/1140) | DISPROVED | $\sim\sqrt{n/2}$ | infinitely many $n$ with $n-2x^2$ prime for all $2x^2<n$? | no: Epure–Gica, with Mollin–Williams; all such $n$ are known, up to at most one exception |
+| [1141](https://www.erdosproblems.com/1141) | DISPROVED (LEAN) | $\sim\sqrt n$ | infinitely many $n$ with $n-k^2$ prime for all $k^2<n$ coprime to $n$? | no: an internal OpenAI model (the site cites [APSSV26b]), deduced from a result of Pollack |
+| [1142](https://www.erdosproblems.com/1142) | OPEN | $\log_2n$ | infinitely many $n$, or any $n>105$, with $n-2^k$ prime for all $1<2^k<n$? | none up to $2^{44}$ (Mientka–Weitzenkamp); Vaughan bounds their number up to $N$ by $N^{1-c\log\log\log N/\log\log N}$ |
+| [236](https://www.erdosproblems.com/236) | OPEN | $\log_2n$ | is $\#\{k\ge0:n-2^k\text{ prime}\}=o(\log n)$? | Erdős: $\gg\log\log n$ for infinitely many $n$ |
+| [852](https://www.erdosproblems.com/852) | OPEN | $\sim\log x$ | is $h(x)=o(\log x)$, and is $h(x)>(\log x)^c$, where $h(x)$ is the longest run of distinct consecutive prime gaps below $x$? | Brun's sieve gives $h(x)\to\infty$ |
+| [1181](https://www.erdosproblems.com/1181) | OPEN | — | is $q(n,\log n)<(1-c)\log^2n$ for all large $n$, where $q(n,k)$ is the least prime not dividing $\prod_{i\le k}(n+i)$? | the primorial gives $(1+o(1))\log^2n$ |
+| [141](https://www.erdosproblems.com/141) | OPEN | $k$ fixed | $k$ consecutive primes in AP, for every $k$? | verified for $k\le10$; infinitely many is open even for $k=3$ |
+| [200](https://www.erdosproblems.com/200) | OPEN | $\sim\log N$ | this problem | §§2–7 |
+
+Twelve problems that I picked myself are a small sample, so what follows is an observation, not evidence. The solved ones fix $k$ (Green–Tao and what follows from it), or are settled by a construction (#457, #1202), or involve about $\sqrt n$ values at once, where finiteness arguments have room (#1140, #1141). Every problem here whose pattern has length about $\log n$ (#1142, #236, #852 and #200) is open. None of the solved techniques transfers: a construction could only show that $L(N)$ is *large*, which the Hardy–Littlewood model of §4 predicts is false, and Green–Tao gives only the lower bound of §7.
+
+The tracker also labels how each solved problem was settled. Over the 16 solved problems tagged `primes` the labels are sieve method 9, analytic estimate 6, explicit construction 6, elementary number theory 5, reduction to known theorem 3, and one each of covering/density argument, Fourier analysis and greedy algorithm. A problem can carry several labels, and they were written by the tracker's models (claude-sonnet-5 and gemini-3.8-flash), not by the site. Sieve methods are the commonest label, and §6 is the test of whether they transfer.
 
 ## 9. Machine-checked formalisation
 
@@ -519,12 +586,15 @@ python src/ref_bruteforce.py          # assumption-free reference
 python src/heuristic.py               # singular series vs exact counts
 python src/compare_counts.py          # measured vs predicted, 30 points
 python src/calibration.py             # KS test of the Poisson model
-python src/barrier.py                 # the sieve barrier
+python src/barrier.py                 # B(k,N) = 2^k k! C(k,N), kept for §6.2
+python src/sieve_limits.py            # what sieves can and cannot say (§6, §8.1); ~70 s, ~3.1 GB peak memory
 python src/analysis.py                # Tables 1 and 2
-python src/final_check.py             # re-derives every claim above; exit 0 = pass
+python src/final_check.py             # re-derives every claim above; exit 0 = pass; ~9 s
 bash lean/verify.sh                   # Lean: axiom audit + statement fidelity; exit 0 = pass
 bash lean-pnt/verify.sh               # Lean: same bound with no PNT hypothesis; exit 0 = pass
 ```
+
+`sieve_limits.py` opens the tracker database `../tracker-and-solver/data/erdos.db` read-only if it is present; without it the §8.1 survey is recorded as null, and `final_check.py` says it skipped that check rather than failing.
 
 `lean-pnt/verify.sh` builds `PrimeNumberTheoremAnd` from source. Measured cold: 3708 jobs
 in 3 min 17 s, and 3717 jobs for the full project, on the same machine. It also re-fetches

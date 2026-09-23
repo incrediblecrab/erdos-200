@@ -1,4 +1,6 @@
-"""The sieve barrier: why no sieve upper bound yields L(N) <= c log N for c < 1.
+"""The Hardy-Littlewood count C(k,N) in closed form, and B(k,N) = 2^k k! C(k,N).
+
+Correction, September 22, 2026. This module was titled "the sieve barrier" and argued that B(k,N) >= 1 everywhere shows no sieve upper bound yields L(N) <= c log N. The inference fails in both directions. The constant 2^k k! + o(1) is a theorem for fixed k as x -> infinity, with an o(1) that depends on k, so B < 1 at k = c log N would have proved nothing. And B >= 1 shows nothing either, because B overstates what a sieve gives: the Selberg main term is at most the number of candidates T0, and B > T0 at 69 of the 82 grid points with log10 N <= 10^6 and at all 19 records. The parenthetical that closed this docstring, calling B > 1 an a fortiori demonstration because granting the bound for every d only inflates B, had the direction backwards: inflating an upper bound cannot show that the true bound is large. The conclusion itself is true, and src/sieve_limits.py proves it for the actual Selberg main term; NOTES.md section 6 is the write-up. Every number below is computed as before, and results/barrier.json is unchanged.
 
 Two things are computed and checked here.
 
@@ -12,19 +14,11 @@ Two things are computed and checked here.
     is the same normalisation Tao-Teravainen state in Example 1.7 of
     arXiv:2107.02158, which is an independent check on the constant.
 
-2.  The classical k-dimensional (Selberg / Halberstam-Richert) sieve upper bound
-    for an admissible k-tuple loses a factor 2^k k! against the truth:
+2.  B(k,N): the classical k-dimensional (Selberg / Halberstam-Richert) upper bound for a fixed admissible k-tuple,
 
-        #{a <= x : a+h_1, ..., a+h_k all prime} <= (2^k k! + o(1)) S(H) x/(log x)^k.
+        #{a <= x : a+h_1, ..., a+h_k all prime} <= (2^k k! + o(1)) S(H) x/(log x)^k,
 
-    Summing that over the admissible d gives  B(k,N) = 2^k k! * C(k,N).  If B(k,N)
-    were < 1 for some k = c log N with c < 1, that would prove L(N) < c log N.
-    We evaluate log B on a grid and report its minimum.
-
-    (Using the sieve bound for every d is generous to the sieve: for d comparable
-    to N the tuple diameter is comparable to x and the bound in this form is not
-    even available.  Making it available only increases B, so a demonstration that
-    B > 1 here is a fortiori a demonstration that the sieve gives nothing.)
+    summed over the admissible d as though it held uniformly in k, gives B(k,N) = 2^k k! * C(k,N). We evaluate log B on a grid and report its minimum; src/sieve_limits.py compares B with T0 at these points.
 """
 import json
 import math
@@ -118,16 +112,16 @@ def validate_large_k():
               % (k, te, ta, ta / te, ae, aa, aa / ae))
     print("  theta(k)/k -> 1, so theta(k)=k is used above KEXACT; the residual is o(k)")
     print("  while the margin in log B grows like k log log k, so it cannot flip the sign.")
-    print("  Note the asymptotic C understates the exact heuristic by ~2x (section 1),")
-    print("  which understates B: the demonstration that B > 1 is therefore conservative.")
+    print("  The asymptotic C understates the exact heuristic by ~2x (section 1), so B is understated by the same factor.")
+    print("  B is not a sieve bound at k = c log N (see the module docstring), so its sign proves nothing either way.")
 
 
 def main():
     validate_asymptotic()
     validate_large_k()
 
-    print("\n2.  classical sieve upper bound  B(k,N) = 2^k k! C(k,N),  k = floor(c log N)")
-    print("    a value < 0 in the log10 column would prove L(N) < c log N.")
+    print("\n2.  B(k,N) = 2^k k! C(k,N),  k = floor(c log N): the fixed-k sieve constant, extrapolated")
+    print("    B is not a valid sieve bound at k = c log N, so neither sign in the log10 column proves anything; see src/sieve_limits.py.")
     print("%12s %6s %8s %14s" % ("log10 N", "c", "k", "log10 B(k,N)"))
     worst = None
     grid = []
@@ -148,7 +142,7 @@ def main():
           % (worst[3], worst[0], worst[1], worst[2]))
     print("  B >= 1 everywhere: %s" % all(g[3] >= 0 for g in grid))
 
-    print("\n3.  the exact condition for the sieve to say anything")
+    print("\n3.  the asymptotic condition for B < 1")
     print("    log B < 0  requires   log log k + log c + gamma + log 2 - 2 + 2/c < 0.")
     print("    min over c of (log c + 2/c) = 1 + log 2 at c = 2, so the requirement is")
     print("    log log k < 2 - gamma - 2 log 2 - 1 = %.4f, i.e. k < %.4f."
@@ -157,15 +151,13 @@ def main():
         thr = 2 - GAMMA - math.log(2) - math.log(c) - 2 / c
         print("    c=%.1f: need log log k < %+.4f -> k < %.4f"
               % (c, thr, math.exp(math.exp(thr)) if thr < 5 else float("inf")))
-    print("    No k >= 3 qualifies at any c, so the sieve bound is vacuous for every c.")
+    print("    No k >= 3 qualifies at any c, so B >= 1 for every c. That says nothing about the sieve itself, whose main term src/sieve_limits.py bounds directly.")
 
-    print("\n4.  how much the sieve would have to be improved")
-    print("    overshoot factor = exp(k[log log k + log c + gamma + log 2 - 2 + 2/c]);")
-    print("    at c=1 that is exp(k[log log k + gamma + log 2 - 2 + ... ]) ~ (log k)^k.")
-    print("    So one would need to beat the Selberg constant 2^k k! by a factor")
-    print("    (log k)^{k(1+o(1))}.  Elliott-Halberstam saves at most 2^k -- not enough.")
-    print("    A perfect sieve (constant 1) gives exactly the HL threshold,")
-    print("    k ~ 2 log N / log log N = o(log N), i.e. it would answer the problem.")
+    print("\n4.  what the overshoot measures")
+    print("    B = exp(k[log log k + log c + gamma + log 2 - 2 + 2/c] + o(k)), which grows like (log k)^k.")
+    print("    This was once read as the factor by which the constant 2^k k! must be beaten. It is not: the (log k)^k comes from B/T0, about (2 e^(gamma-1) c log k)^k, the factor by which B exceeds the candidate count T0, which no sieve main term can exceed.")
+    print("    src/sieve_limits.py measures the real shortfall: a proof needs about 2/c - 1 nats per term, and at any fixed level N^A the Selberg main term saves o(1) per term.")
+    print("    An upper bound matching the Hardy-Littlewood count uniformly in k would give L(N) <= (2 + o(1)) log N / log log N and answer the problem.")
 
     json.dump({"grid": [{"log10N": g[0], "c": g[1], "k": g[2], "log10B": g[3]} for g in grid],
                "min_log10B": worst[3]},
